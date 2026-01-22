@@ -211,33 +211,30 @@ const TicketSelectionPage = () => {
     // Change this part inside handleContinue
     navigate(`/book/${id}`, {
       state: {
-        // 1. Unified main object
-        mainData: {
+        event: {
           id: event.id,
           title: event.name || parsedEvent.title,
           venue: parsedEvent.venue,
+          date: selectedDate,
+          time: selectedTime,
+          image: event.thumbnailFiles?.[0]?.url || parsedEvent.thumbnail || parsedEvent.image,
+          description: parsedEvent.description,
+          // Include required fields for booking API
           categoryId: event.categoryId,
           providerId: event.providerId,
           providerServiceId: event.id,
-          bookingType: "store", // Or dynamic based on category
-          image: event.thumbnailFiles?.[0]?.url || parsedEvent.thumbnail,
         },
-        // 2. Map tickets to generic lineItems
-        lineItems: selectedTickets.map(t => ({
-          id: t.id,
-          name: t.name,
-          quantity: t.quantity,
-          pricePerItem: t.pricePerTicket,
-          totalPrice: t.totalPrice
-        })),
-        // 3. Unified schedule object
-        schedule: {
-          date: selectedDate,
-          time: selectedTime
-        }
+        selectedTickets,
+        totalAmount,
+        totalItems,
+        selectedDate,
+        selectedTime,
+        // Include raw event for additional data
+        rawEvent: event
       }
     });
   };
+
 
   if (isLoading) {
     return (

@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Calendar, MapPin, Users, Clock, Hourglass, Navigation, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { getServiceById } from "@/api/apiUtils";
-import Header from "@/components/Header";
 import { SkeletonDetailHeader, SkeletonDetailInfo, SkeletonOrderSummary } from "@/components/Skeleton";
 import { cleanLocationText } from "@/utils/cleanLocationText";
 
@@ -54,7 +53,6 @@ const EventDetails = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 pt-8 md:pt-16 pb-24 md:pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">

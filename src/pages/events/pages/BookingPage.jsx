@@ -1,88 +1,156 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, Tag, Shield, Loader2, Info } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Tag, Shield, Check, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useEvents } from '@/context/EventContext';
 import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import DiscountDrawer from '@/components/utils/DiscountDrawer';
-import { createBooking, getCategoryById, cancelBookingById } from "@/api/apiUtils";
+import {
+  createBooking,
+  getCategoryById,
+  cancelBookingById,
+  validateDiscountCode,
+} from "@/api/apiUtils";
 import { useRazorpay, verifyPayment } from '@/services/paymentService';
+import { Skeleton, SkeletonOrderSummary } from '@/components/Skeleton';
 import { toast } from 'react-hot-toast';
 import { mergeDateTime } from '@/utils/formatdate';
 import { cleanLocationText } from '@/utils/cleanLocationText';
 
 const BookingPage = () => {
-  const { id, provider_id } = useParams();
-  const activeId = id || provider_id; // Works for both route definitions
+  const { id: eventId } = useParams();
   const navigate = useNavigate();
   const { user, openAuthModal } = useAuth();
   const { setBookingDetails } = useEvents();
   const location = useLocation();
   const { initiatePayment, isPaymentLoading } = useRazorpay();
 
-  /* Expects state to contain:
-     - mainData: { id, title, venue, providerId, categoryId, bookingType (optional) }
-     - lineItems: Array of { id, name, quantity, pricePerItem, totalPrice }
-     - schedule: { date, time }
-  */
+  // Get data from navigation state
   const {
-    mainData,
-    lineItems = [],
-    schedule = { date: null, time: null }
+    event,
+    selectedTickets = [],
+    selectedDate,
+    selectedTime
   } = location.state || {};
 
-  const [bookingStatus, setBookingStatus] = useState('idle');
+  const [bookingStatus, setBookingStatus] = useState('idle'); // 'idle' | 'processing' | 'success' | 'error'
   const [bookingId, setBookingId] = useState(null);
+
+  // Discount state - using array pattern for DiscountDrawer
   const [appliedDiscounts, setAppliedDiscounts] = useState([]);
   const [discountLoading, setDiscountLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [platformFee, setPlatformFee] = useState(0);
 
-  // Safety Redirect
+  // Redirect back if no data is available
   useEffect(() => {
-    if (!mainData || !lineItems.length) {
-      toast.error("Session expired. Please select items again.");
-      navigate(-1);
+    if (!event || !selectedTickets || selectedTickets.length === 0) {
+      navigate(`/tickets/${eventId}`);
     }
-  }, [mainData, lineItems, navigate]);
+  }, [event, selectedTickets, eventId, navigate]);
 
-  // Fetch Platform Fee based on Category
+  // Helper function to calculate total discount amount from all applied discounts
+  const calculateTotalDiscount = () => {
+    return appliedDiscounts.reduce((total, discount) => {
+      if (discount.type === 'fixed' || discount.discountAmount) {
+        return total + (discount.discountAmount || 0);
+      }
+      const percentSavings = (subtotal * (discount.discountPercent || 0)) / 100;
+      if (discount.maxDiscountAmount && percentSavings > discount.maxDiscountAmount) {
+        return total + discount.maxDiscountAmount;
+      }
+      return total + percentSavings;
+    }, 0);
+  };
+
+  // Get the first applied discount code for booking payload
+  const getAppliedDiscountCode = () => {
+    return appliedDiscounts.length > 0 ? appliedDiscounts[0].code : undefined;
+  };
+
+  // Get cities from applied discount for booking payload
+  const getAppliedDiscountCities = () => {
+    return appliedDiscounts.length > 0 ? (appliedDiscounts[0].cities || ['Bikaner']) : ['Bikaner'];
+  };
+
+  // Fetch platform fee from category
   useEffect(() => {
     const fetchPlatformFee = async () => {
-      if (mainData?.categoryId) {
+      if (event?.categoryId) {
         try {
-          const response = await getCategoryById(mainData.categoryId);
+          const response = await getCategoryById(event.categoryId);
           if (response?.success && response?.data?.platformFee) {
             setPlatformFee(Number(response.data.platformFee));
           }
-        } catch (error) { console.error('Fee fetch error:', error); }
+        } catch (error) {
+          console.error('Error fetching platform fee:', error);
+        }
       }
     };
     fetchPlatformFee();
-  }, [mainData?.categoryId]);
+  }, [event?.categoryId]);
 
-  if (!mainData) return null;
+  useEffect(() => {
+    if (!event) {
+      navigate('/');
+    }
+  }, [event, navigate]);
 
-  // Calculation Logic
-  const subtotal = lineItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  if (!event) return null;
 
+  // Calculate totals from selected tickets
+  const subtotal = selectedTickets.reduce((sum, ticket) => sum + ticket.totalPrice, 0);
+
+  // Calculate discount from applied discounts
   const promoDiscountAmount = appliedDiscounts.reduce((total, discount) => {
-    const val = discount.discountAmount || discount.savings || 0;
-    if (val) return total + Number(val);
-
-    const percent = discount.discountPercent || discount.value || 0;
-    const percentSavings = (subtotal * Number(percent)) / 100;
-    return total + (discount.maxDiscountAmount ? Math.min(percentSavings, discount.maxDiscountAmount) : percentSavings);
+    if (discount.discountAmount) {
+      return total + Number(discount.discountAmount || 0);
+    }
+    if (discount.savings) {
+      return total + Number(discount.savings || 0);
+    }
+    if (discount.discountPercent || discount.value) {
+      const percent = discount.discountPercent || discount.value || 0;
+      const percentSavings = (subtotal * Number(percent)) / 100;
+      if (discount.maxDiscountAmount && percentSavings > discount.maxDiscountAmount) {
+        return total + Number(discount.maxDiscountAmount);
+      }
+      return total + percentSavings;
+    }
+    return total;
   }, 0);
 
   const finalTotal = subtotal - promoDiscountAmount + platformFee;
 
-  // Unified Booking Handler
+  const updateBookingStatus = async (bookingId, status) => {
+    try {
+      // TODO: Implement actual API call to update booking status
+      console.log(`Updating booking ${bookingId} status to:`, status);
+      return true;
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+      toast.error('Failed to update booking status');
+      return false;
+    }
+  };
+
+  const handlePaymentFailure = async (error) => {
+    console.error('Payment failed:', error);
+    setBookingStatus('error');
+
+    // Update booking status to failed
+    if (bookingId) {
+      await updateBookingStatus(bookingId, 'payment_failed');
+    }
+
+    toast.error('Payment failed. Please try again.');
+  };
+
   const handleBooking = async () => {
     if (!user) {
-      toast.error('Please login to continue');
+      toast.error('Please login to book tickets');
       openAuthModal();
       return;
     }
@@ -91,208 +159,322 @@ const BookingPage = () => {
     setIsProcessing(true);
 
     try {
-      // Date Conversion Logic
+      // Convert date from yyyy-MM-dd to dd-MM-yyyy format for mergeDateTime
       const convertDateFormat = (dateStr) => {
-        const d = new Date(dateStr);
-        return format(d, 'dd-MM-yyyy');
+        if (!dateStr) throw new Error('Date is required');
+        const [year, month, day] = dateStr.split('-');
+        return `${day}-${month}-${year}`;
       };
 
+      // Get the event time (first time slot if multiple)
+      const eventTime = selectedTime || '10:00 AM';
+
+      // Use mergeDateTime utility to format scheduledTime
+      // Format: "YYYY-MM-DD HH:mm:ss"
       const scheduledTime = mergeDateTime(
-        convertDateFormat(schedule.date),
-        schedule.time || '10:00 AM'
+        convertDateFormat(selectedDate),
+        eventTime
       );
 
-      // Generic Services Payload
+      console.log('Formatted scheduledTime:', scheduledTime);
+
+      // Build services array with proper variant structure
       const services = [{
-        providerServiceId: mainData.providerServiceId || mainData.id,
+        providerServiceId: event.providerServiceId || event.id,
         quantity: 1,
-        variants: lineItems.map(item => ({
-          spServiceVariantId: item.id,
-          qty: item.quantity
+        variants: selectedTickets.map(ticket => ({
+          spServiceVariantId: ticket.id,
+          qty: ticket.quantity
         }))
       }];
 
-      const bookingPayload = {
-        categoryId: mainData.categoryId,
-        providerId: mainData.providerId,
-        bookingType: mainData.bookingType || "store", // "sports", "store", "appointment"
+      // Build booking payload per API requirements
+      const bookingData = {
+        categoryId: event.categoryId,
+        providerId: event.providerId,
+        bookingType: "store",
         scheduledTime,
         notes: "",
         kcoinAmountToUse: 0,
         paymentMode: "online",
         services,
         attributes: [],
-        discountCode: appliedDiscounts[0]?.code,
-        cities: appliedDiscounts[0]?.cities || ['Bikaner'],
+        discountCode: getAppliedDiscountCode(),
+        cities: getAppliedDiscountCities(),
       };
 
-      const response = await createBooking(bookingPayload);
-      const createdId = response?.data?.booking?.id || response?.data?.id;
-      const paymentOrder = response?.data?.payment;
+      console.log('Creating booking with payload:', bookingData);
 
-      if (!createdId || !paymentOrder) throw new Error('Booking failed to initialize');
+      const bookingResponse = await createBooking(bookingData);
+      console.log('Booking response:', bookingResponse);
 
-      setBookingId(createdId);
+      // Extract booking ID - handle different response structures
+      const createdBookingId = bookingResponse?.data?.booking?.id ||
+        bookingResponse?.data?.id ||
+        bookingResponse?.id;
+      const payment = bookingResponse?.data?.payment || bookingResponse?.payment;
 
-      const razorpayOptions = {
-        handler: async function (paymentResponse) {
+      console.log('Created booking ID:', createdBookingId);
+      console.log('Payment object:', payment);
+
+      if (!createdBookingId) {
+        throw new Error('Booking was created but ID was not returned');
+      }
+
+      setBookingId(createdBookingId);
+
+      // 2. Initialize Razorpay payment
+      if (!payment) {
+        throw new Error('Payment order was not created');
+      }
+
+      const options = {
+        handler: async function (response) {
           try {
-            const verification = await verifyPayment(paymentResponse);
+            // Verify payment with your backend
+            const verification = await verifyPayment(response);
+
             if (verification.success) {
-              const successState = {
-                bookingId: createdId,
-                bookingCode: response?.data?.bookingCode || createdId,
-                mainData,
-                lineItems,
-                total: finalTotal.toFixed(2)
-              };
-              setBookingDetails(successState);
+              // Set booking details in context
+              setBookingDetails({
+                bookingId: createdBookingId,
+                bookingCode: bookingResponse?.data?.bookingCode || createdBookingId,
+                event: {
+                  ...event,
+                  date: selectedDate,
+                  time: selectedTime
+                },
+                tickets: selectedTickets,
+                subtotal: Number(subtotal || 0).toFixed(2),
+                discount: Number(promoDiscountAmount || 0).toFixed(2),
+                total: Number(finalTotal || 0).toFixed(2),
+                promoCode: getAppliedDiscountCode(),
+              });
+
               setBookingStatus('success');
-              toast.success('Confirmed Successfully!');
-              navigate('/booking/confirmation', { state: successState });
+              toast.success('Booking confirmed!');
+
+              // Navigate to success page
+              navigate('/booking/confirmation', {
+                state: {
+                  bookingId: createdBookingId,
+                  bookingCode: bookingResponse?.data?.bookingCode || createdBookingId,
+                  event: {
+                    ...event,
+                    date: selectedDate,
+                    time: selectedTime
+                  },
+                  tickets: selectedTickets,
+                  total: Number(finalTotal || 0).toFixed(2)
+                }
+              });
+            } else {
+              throw new Error('Payment verification failed');
             }
-          } catch (err) {
+          } catch (error) {
+            console.error('Payment verification error:', error);
             setBookingStatus('error');
-            toast.error('Verification failed. Contact support.');
-          } finally { setIsProcessing(false); }
+            toast.error('Payment verification failed. Please contact support.');
+          } finally {
+            setIsProcessing(false);
+          }
         },
         modal: {
           ondismiss: async () => {
-            await cancelBookingById(createdId, { reason: 'User cancelled payment' });
+            // Handle modal dismissal (user closed the payment modal)
+            try {
+              await cancelBookingById(createdBookingId, { reason: 'Payment cancelled by user' });
+            } catch (e) {
+              console.error('Failed to cancel booking:', e);
+            }
             setBookingStatus('idle');
             setIsProcessing(false);
             toast.error('Payment cancelled');
           }
+        },
+        onFailure: (error) => {
+          handlePaymentFailure(error);
+          setIsProcessing(false);
         }
       };
 
-      initiatePayment(paymentOrder, razorpayOptions);
+      // Initiate Razorpay payment with the payment order from response
+      initiatePayment(payment, options);
 
     } catch (error) {
+      console.error('Booking error:', error);
       setBookingStatus('error');
-      toast.error(error.response?.data?.message || 'Processing failed');
+      toast.error(error.response?.data?.message || error.message || 'Failed to process booking');
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
+    <div className="min-h-screen bg-gray-50">
       {/* <Header /> */}
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-black mb-6 transition-all">
-          <ArrowLeft size={18} />
-          <span className="font-medium">Go Back</span>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 pb-24 sm:pb-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-4 sm:mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to event</span>
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* LEFT: Checkout Info */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-4">
-              <div className="bg-blue-50 p-3 rounded-xl text-blue-600">
-                <Shield size={24} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Booking Form */}
+          <div className="space-y-6">
+            {/* Secure Checkout badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl p-6 shadow-sm flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-green-50 border border-green-200 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Secure Checkout</h2>
+                  <p className="text-xs text-gray-500">256-bit encryption • PCI compliant</p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-bold text-gray-900">Safe & Secure Booking</h2>
-                <p className="text-sm text-gray-500">Your transaction is protected with industry-standard encryption.</p>
-              </div>
-            </div>
+              <span className="hidden sm:inline-block text-xs text-gray-500">Need help? Contact support</span>
+            </motion.div>
 
-            <DiscountDrawer
-              appliedDiscounts={appliedDiscounts}
-              setAppliedDiscounts={setAppliedDiscounts}
-              dataToFetchDiscount={{
-                providerId: mainData.providerId,
-                categoryId: mainData.categoryId,
-                bookingAmount: subtotal,
-                serviceIds: [mainData.providerServiceId || mainData.id],
-                paymentMode: 'online'
-              }}
-              loading={discountLoading}
-              setLoading={setDiscountLoading}
-              user={user}
-              openAuthModal={openAuthModal}
-            />
+            {/* Discount Drawer Component */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <DiscountDrawer
+                appliedDiscounts={appliedDiscounts}
+                setAppliedDiscounts={setAppliedDiscounts}
+                dataToFetchDiscount={{
+                  providerId: event.providerId,
+                  categoryId: event.categoryId,
+                  bookingAmount: subtotal,
+                  serviceIds: [event.providerServiceId || event.id],
+                  paymentMode: 'online'
+                }}
+                loading={discountLoading}
+                setLoading={setDiscountLoading}
+                user={user}
+                openAuthModal={openAuthModal}
+              />
+            </motion.div>
 
-            <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 flex gap-3">
-              <Info className="text-blue-500 shrink-0" size={20} />
-              <p className="text-sm text-blue-800 leading-relaxed">
-                By clicking "Confirm & Pay", you agree to the <strong>Cancellation Policy</strong> and <strong>Terms of Service</strong> for {mainData.title}.
-              </p>
-            </div>
+            {/* Payment methods removed in simplified UI. We can integrate at the gateway step. */}
           </div>
 
-          {/* RIGHT: Summary Card */}
-          <div className="lg:col-span-5">
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-xl sticky top-24"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-xl p-6 shadow-sm sticky top-24"
             >
-              <h2 className="text-xl font-black text-gray-900 mb-6 uppercase tracking-tight">Order Summary</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
 
-              {/* Item Info */}
-              <div className="mb-6">
-                <h3 className="text-lg font-bold text-gray-900 leading-tight mb-3">{mainData.title}</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
-                    <Calendar size={14} className="text-blue-500" />
-                    <span>{format(new Date(schedule.date), 'EEE, dd MMM yyyy')} • {schedule.time}</span>
+              {/* Event Info */}
+              <div className="border-b pb-4 mb-4">
+                <h3 className="font-semibold text-gray-900 mb-2">{event.title}</h3>
+
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-brand-secondary" />
+                    <span>{format(new Date(selectedDate), 'EEEE, MMMM d, yyyy')} • {selectedTime}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
-                    <MapPin size={14} className="text-blue-500" />
-                    <span className="line-clamp-1">{cleanLocationText(mainData.venue)}</span>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-4 h-4 text-brand-secondary" />
+                    <span>{cleanLocationText(event.venue)}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Line Items */}
-              <div className="space-y-3 mb-6">
-                {lineItems.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <div>
-                      <p className="text-sm font-bold text-gray-800">{item.name}</p>
-                      <p className="text-[10px] uppercase font-black text-gray-400">Qty: {item.quantity} × ₹{item.pricePerItem}</p>
+              {/* Selected Tickets */}
+              <div className="mb-4">
+                <h4 className="font-medium text-gray-900 mb-2">Your Tickets</h4>
+                <div className="space-y-3">
+                  {selectedTickets.map((ticket, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm">{ticket.name} × {ticket.quantity}</p>
+                        <p className="text-xs text-gray-500">₹{ticket.pricePerTicket} each</p>
+                      </div>
+                      <span className="font-medium">₹{ticket.totalPrice.toLocaleString()}</span>
                     </div>
-                    <span className="font-bold text-gray-900">₹{item.totalPrice.toLocaleString()}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
-              {/* Totals */}
-              <div className="space-y-3 border-t pt-5">
-                <div className="flex justify-between text-gray-500 text-sm font-medium">
-                  <span>Subtotal</span>
+              {/* Ticket Selection */}
+              {/* Ticket selector hidden per request */}
+
+              {/* Price Breakdown */}
+              <div className="space-y-3 border-t pt-4">
+                <div className="flex justify-between">
+                  <span className="text-gray-700">Subtotal</span>
                   <span>₹{subtotal.toLocaleString()}</span>
                 </div>
 
-                {appliedDiscounts.map((d, i) => (
-                  <div key={i} className="flex justify-between text-green-600 text-sm font-bold">
-                    <span className="flex items-center gap-1"><Tag size={12} /> {d.code}</span>
-                    <span>-₹{promoDiscountAmount.toLocaleString()}</span>
+                {appliedDiscounts.length > 0 && (
+                  <div className="space-y-2">
+                    {appliedDiscounts.map((discount) => {
+                      const savings = discount.type === 'fixed' || discount.discountAmount
+                        ? discount.discountAmount
+                        : Math.min(
+                          (subtotal * (discount.discountPercent || 0)) / 100,
+                          discount.maxDiscountAmount || Infinity
+                        );
+                      return (
+                        <div key={discount.id} className="flex justify-between text-green-600">
+                          <span className="flex items-center">
+                            <Tag className="w-4 h-4 mr-1" />
+                            {discount.code}
+                            {discount.discountPercent > 0 && ` (-${discount.discountPercent}%)`}
+                          </span>
+                          <span>-₹{savings.toLocaleString()}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
 
-                <div className="flex justify-between text-gray-500 text-sm font-medium">
+                <div className="flex justify-between text-sm text-gray-600">
                   <span>Platform Fee</span>
                   <span>₹{platformFee.toLocaleString()}</span>
                 </div>
 
-                <div className="flex justify-between items-end pt-2">
-                  <span className="text-gray-900 font-bold uppercase text-xs tracking-widest">Total Payable</span>
-                  <span className="text-3xl font-black text-gray-900">₹{finalTotal.toLocaleString()}</span>
+                <div className="border-t pt-3 flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span>₹{finalTotal.toLocaleString()}</span>
                 </div>
               </div>
 
+              {/* Book Button */}
               <motion.button
-                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium text-center hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 onClick={handleBooking}
                 disabled={isProcessing || isPaymentLoading}
-                className="w-full mt-8 bg-gray-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-gray-200 hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
               >
-                {isProcessing ? <Loader2 className="animate-spin" /> : 'Confirm & Pay'}
+                {(isProcessing || isPaymentLoading) ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : 'Confirm & Pay'}
               </motion.button>
+
+              <div className="flex items-center justify-center space-x-2 mt-4 text-sm text-gray-500">
+                <Shield className="w-4 h-4" />
+                <span>100% secure payment</span>
+              </div>
             </motion.div>
           </div>
         </div>

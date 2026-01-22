@@ -28,7 +28,7 @@ export const appRoutes = [
       { index: true, element: <HomePage /> },
 
       // --- EVENTS SECTION ---
-      { path: "events", element: <EventDetails /> },
+      // { path: "events", element: <EventDetails /> },
       { path: "event/:id", element: <EventDetails /> },
       { path: "tickets/:id", element: <TicketSelection /> },
       { path: "booking/confirmation", element: <BookingConfirmationPage /> },

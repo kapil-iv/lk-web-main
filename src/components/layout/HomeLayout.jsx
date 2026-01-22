@@ -1,7 +1,7 @@
 import Header from "../Header";
 import Footer from "../Footer";
 import { Outlet } from "react-router-dom";
-import MobileNav from "../MobileNav";
+// import MobileNav from "../MobileNav";
 
 const HomeLayout = () => {
   return (
