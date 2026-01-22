@@ -1,0 +1,71 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { format, parseISO, isValid } from 'date-fns';
+import { cleanLocationText } from '../utils/cleanLocationText';
+
+const EventCard = ({ event, index }) => {
+  // Robust date/time formatting with fallbacks
+  let dateObj = null;
+  if (event?.date) {
+    // Try ISO first
+    const iso = parseISO(event.date);
+    if (isValid(iso)) {
+      dateObj = iso;
+    } else if (event?.time) {
+      const combined = new Date(`${event.date}T${event.time}`);
+      if (isValid(combined)) dateObj = combined;
+    } else {
+      const asDate = new Date(event.date);
+      if (isValid(asDate)) dateObj = asDate;
+    }
+  }
+
+  const formattedDateTime = dateObj
+    ? format(dateObj, event?.time ? 'EEE, d MMM, p' : 'EEE, d MMM')
+    : (event?.time ? event.time : 'Date TBA');
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="group w-full"
+    >
+      <Link to={`/event/${event.id}`} className="block h-full">
+        <div className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border h-full flex flex-col">
+          {/* Image */}
+          <div className="relative overflow-hidden flex-grow">
+            <img
+              src={event.image}
+              alt={event.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              style={{ aspectRatio: '2/3' }}
+            />
+          </div>
+
+          {/* Content */}
+          <div className="p-3 lg:p-4">
+            <p className="text-xs lg:text-sm font-semibold text-blue-700 truncate">
+              {formattedDateTime}
+            </p>
+
+            <h3 className="text-sm lg:text-base font-semibold text-gray-800 truncate mt-1">
+              {event.title}
+            </h3>
+
+            <p className="text-xs lg:text-sm text-gray-600 truncate">
+              {cleanLocationText(event.venue)}, {cleanLocationText(event.location)}
+            </p>
+
+            <p className="text-xs lg:text-sm text-gray-600 mt-1">
+              ₹{event.price} onwards
+            </p>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+};
+
+export default EventCard;

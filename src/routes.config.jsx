@@ -1,0 +1,60 @@
+import HomePage from "./pages/HomePage";
+import EventDetails from "./pages/events/pages/EventDetails";
+import TicketSelection from "./pages/events/pages/TicketSelection";
+import BookingPage from "./pages/events/pages/BookingPage";
+import SportsBookingPage from "./components/booking/BookingPage";
+import BookingConfirmationPage from "./pages/events/pages/BookingConfirmationPage";
+import Team from "./pages/Team";
+import Contact from "./pages/Contact";
+import DeleteAccount from "./pages/DeleteAccount";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import HomeLayout from "./components/layout/HomeLayout";
+// import SportsLanding from "./pages/sports/features/home/Home"; // Unused?
+import SportsHome from "./pages/sports/features/home/Home";
+import Venues from "./pages/sports/features/book/Book";
+import BookingSummary from "./components/booking/BookingSummary"
+import BookingStatus from "./components/booking/BookingStatus"
+import Sports from "./pages/sports/Sports"
+import Home from "./pages/sports/features/home/Home";
+import Play from "./pages/sports/features/play/Play";
+import Book from "./pages/sports/features/book/Book";
+
+export const appRoutes = [
+  {
+    path: "/",
+    element: <HomeLayout />,
+    children: [
+      { index: true, element: <HomePage /> },
+
+      // --- EVENTS SECTION ---
+      { path: "events", element: <EventDetails /> },
+      { path: "event/:id", element: <EventDetails /> },
+      { path: "tickets/:id", element: <TicketSelection /> },
+      { path: "booking/confirmation", element: <BookingConfirmationPage /> },
+      { path: "book/:id", element: <BookingPage /> }, // Events generic booking
+
+      // --- SPORTS SECTION (Grouped) ---
+      {
+        path: "sports",
+        element: <Sports />,
+        children: [
+          { index: true, element: <Home /> },           // URL: /sports
+          { path: "play", element: <Play /> },           // URL: /sports/play
+          { path: "book", element: <Book /> },           // URL: /sports/book
+          { path: "venue/:providerId", element: <SportsBookingPage /> }, // URL: /sports/venue/:id
+          { path: "booking-summary", element: <BookingSummary /> }, // URL: /sports/booking-summary
+          { path: "booking-status", element: <BookingStatus /> }, // URL: /sports/booking-status
+        ],
+      },
+
+      // --- COMMON PAGES ---
+      { path: "success", element: <BookingStatus /> },
+      { path: "team", element: <Team /> },
+      { path: "contact", element: <Contact /> },
+      { path: "delete-account", element: <DeleteAccount /> },
+      { path: "terms", element: <Terms /> },
+      { path: "privacy", element: <Privacy /> },
+    ],
+  },
+];
