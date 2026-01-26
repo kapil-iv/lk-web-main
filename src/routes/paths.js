@@ -1,4 +1,5 @@
 export const paths = {
+
   auth: {
     login: "/login",
     register: "/register",
@@ -28,6 +29,10 @@ export const paths = {
     bookingStatus: "/sports/booking-status",
     serviceSelect: "/sports/service-select",
     bookingConfirm: "/sports/booking-confirm",
+    createGame: "/sports/play/create-game",
+    joinGame: "/sports/play/join-game/:id",
+    myGames: "/sports/play/my-games",
+    gamesDetail: "/sports/play/game-detail",
   },
   fitness: {
     home: (categoryId) => `/fitness/${categoryId}`,

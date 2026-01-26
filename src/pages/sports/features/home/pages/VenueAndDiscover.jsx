@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -14,12 +14,6 @@ import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { paths } from "../../../../../routes/paths";
 import SportsCardCarousel from "../../../../../components/ui/SportsCardCarousel";
 import { trimTextBig } from "../../../../../utils/helpers";
-import useGeoLocation from "../../../../../hooks/useGeoLocation";
-// import {
-//   getServiceProviders,
-//   getAllServiceCategories,
-// } from "../../../api/apiUtils";
-
 import {
   fetchSportsVenues,
   fetchFitnessVenues,
@@ -27,12 +21,8 @@ import {
 } from "../../../../../services/venues.services";
 import useLatLngStore from "../../../../../store/useLatLngStore";
 
-
-
-
 const BookVenueAndDiscover = () => {
   const navigate = useNavigate();
-  // const { lat, lng, loading: locationLoading, error } = useGeoLocation();
   const { lat, lng, locationLoading, error } = useLatLngStore();
   const venueSwiperRef = useRef(null);
 
@@ -40,19 +30,22 @@ const BookVenueAndDiscover = () => {
   const [sports, setSports] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const swiperOptions = {
+  // Logic: Swiper tabhi loop karega jab slides slidesPerView se zyada hongi
+  const shouldLoop = venues.length > 3;
+
+  const swiperOptions = useMemo(() => ({
     modules: [Navigation, Autoplay, Mousewheel],
     spaceBetween: 20,
     slidesPerView: 1,
-    loop: true,
-    autoplay: { delay: 3500, disableOnInteraction: false },
+    loop: shouldLoop,
+    autoplay: shouldLoop ? { delay: 3500, disableOnInteraction: false } : false,
     mousewheel: { forceToAxis: true },
     breakpoints: {
       640: { slidesPerView: 1.5 },
       768: { slidesPerView: 2 },
       1024: { slidesPerView: 3 },
     },
-  };
+  }), [shouldLoop]);
 
   useEffect(() => {
     if (!lat || !lng) return;
@@ -60,13 +53,13 @@ const BookVenueAndDiscover = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [sports, fitness, categories] = await Promise.all([
+        const [sportsData, fitnessData, categories] = await Promise.all([
           fetchSportsVenues({ lat, lng }),
           fetchFitnessVenues({ lat, lng }),
           fetchSportsCategories(),
         ]);
 
-        setVenues([...sports, ...fitness]);
+        setVenues([...sportsData, ...fitnessData]);
         setSports(categories);
       } catch (err) {
         console.error("Failed to fetch home data:", err);
@@ -136,6 +129,7 @@ const BookVenueAndDiscover = () => {
           </div>
 
           <Swiper
+            key={`swiper-v-${venues.length}-${shouldLoop}`} // Fix: key change force re-initialization
             {...swiperOptions}
             onSwiper={(s) => (venueSwiperRef.current = s)}
           >
@@ -150,9 +144,7 @@ const BookVenueAndDiscover = () => {
                 const distanceKm = Number.isFinite(Number(venue.distance))
                   ? Number(venue.distance).toFixed(1)
                   : "--";
-                {
-                  console.log("Venue ID: ", venue.id);
-                }
+                
                 return (
                   <SwiperSlide key={venue.id} className="pb-4">
                     <div

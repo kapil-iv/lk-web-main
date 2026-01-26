@@ -11,12 +11,12 @@ import { paths } from "../../../../../routes/paths";
 const LKExplores = () => {
   const navigate = useNavigate();
   const { lat, lng, locationLoading, error } = useLatLngStore();
-  const [activeTab, setActiveTab] = useState("venues");
+  const [activeTab, setActiveTab] = useState("sports");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const tabs = [
-    { id: "venues", label: "Venues", categoryId: "3" },
+    { id: "sports", label: "Sports", categoryId: "3" },
     { id: "fitness", label: "Fitness", categoryId: "8" },
     // { id: "coaching", label: "Coaching", categoryId: "4" },
     // { id: "events", label: "Events", categoryId: "5" },
@@ -126,7 +126,7 @@ const LKExplores = () => {
                   <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                     <div>
                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Starts from</p>
-                        <p className="text-sm font-black text-gray-900">₹{item.price || '499'}<span className="text-[10px] font-normal text-gray-500">/hr</span></p>
+                        <p className="text-sm font-black text-gray-900">₹{item.price || '500'}<span className="text-[10px] font-normal text-gray-500">/hr</span></p>
                     </div>
                     <div className="bg-brand-secondary text-white p-2 rounded-xl group-hover:bg-brand-primary transition-colors">
                       <ChevronRight size={18} />

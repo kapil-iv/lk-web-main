@@ -173,7 +173,8 @@ const BookingSummary = () => {
               <h3 className="text-[10px] font-black text-gray-400 uppercase mb-4">Fare Breakdown</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between"><span>Base Fare</span><span className="font-bold">₹{subTotal}</span></div>
-                <div className="flex justify-between"><span>Taxes</span><span className="font-bold">₹{totalTax}</span></div>
+                <div className="flex justify-between"><span>platform fee</span><span className="font-bold">₹{platformFee}</span></div>
+                <div className="flex justify-between"><span>Taxes {taxRate ? `(${taxRate}%)` : ""}</span><span className="font-bold">₹{totalTax}</span></div>
               </div>
             </div>
 
@@ -187,20 +188,74 @@ const BookingSummary = () => {
           </div>
 
           <aside className="lg:col-span-4">
-            <div className="bg-white rounded-[2.5rem] p-8 border shadow-xl">
-              <h3 className="text-xs font-black text-blue-600 uppercase mb-8 text-center">Summary</h3>
-              <div className="flex justify-between text-3xl font-black text-blue-600 pt-6 border-t border-dashed">
-                <span className="text-sm text-gray-400 self-center">Total</span>
-                <span>₹{finalAmount}</span>
+            <div className="bg-white rounded-[2.5rem] p-8 border shadow-xl sticky top-24">
+              <h3 className="text-xs font-black text-blue-600 uppercase mb-6 text-center tracking-widest">
+                Booking Summary
+              </h3>
+
+              {/* Booking Details (Date/Time/Sport) */}
+              <div className="grid grid-cols-1 gap-3 mb-6 bg-gray-50/50 p-4 rounded-3xl border border-dashed">
+                <div className="flex justify-between items-center">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">Date</p>
+                  <p className="font-bold text-sm">{selectedDate}</p>
+                </div>
+                <div className="flex justify-between items-center">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">Time</p>
+                  <p className="font-bold text-sm">{selectedSlots[0]?.startTime}</p>
+                </div>
+                <div className="flex justify-between items-center">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">Sport</p>
+                  <p className="font-bold text-sm">{selectedSport?.name}</p>
+                </div>
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="space-y-3 mb-6 px-1">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-medium">Base Price ({selectedSlots.length} Slots)</span>
+                  <span className="font-bold text-gray-700">₹{subTotal}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-medium">Taxes ({taxRate}%)</span>
+                  <span className="font-bold text-gray-700">₹{totalTax.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-medium">Platform Fees</span>
+                  <span className="font-bold text-gray-700">₹{platformFee}</span>
+                </div>
+
+                {kCoinsSelected && (
+                  <div className="flex justify-between items-center text-sm text-green-600 font-bold">
+                    <span>K-Coins Discount</span>
+                    <span>- ₹{kCoinInCurrency}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Final Total */}
+              <div className="pt-6 border-t border-gray-100">
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-gray-400 uppercase">Total Amount</span>
+                    <span className="text-3xl font-black text-blue-600">₹{finalAmount}</span>
+                  </div>
+                  <ShieldCheck className="text-blue-600 opacity-20" size={40} />
+                </div>
               </div>
 
               <button
                 disabled={loading || isPaymentLoading}
                 onClick={handleBooking}
-                className="w-full h-16 mt-8 rounded-2xl font-black bg-blue-600 text-white flex items-center justify-center gap-3"
+                className="w-full h-16 mt-8 rounded-2xl font-black bg-blue-600 text-white flex items-center justify-center gap-3 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-70 shadow-lg shadow-blue-200"
               >
-                {loading || isPaymentLoading ? <Loader2 className="animate-spin" /> : <ShieldCheck size={18} />}
-                {loading || isPaymentLoading ? "Processing..." : `Secure Payment`}
+                {loading || isPaymentLoading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <ShieldCheck size={20} />
+                )}
+                {loading || isPaymentLoading ? "Processing..." : `Pay ₹${finalAmount}`}
               </button>
             </div>
           </aside>

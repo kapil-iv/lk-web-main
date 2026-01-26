@@ -6,16 +6,8 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-// const TRENDING_CARDS = [
-//   { id: 1, name: "Football", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0RIEjylorsyjJ-CINApa3OJlOEDs4adq06g&s" },
-//   { id: 2, name: "Basketball", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9SIhIwS6OVHrGIRa_G_G_kMIg3xktu0I4WQ&s" },
-//   { id: 3, name: "Baseball", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCE1VJ3jRJODMJzN1Eqs34F4bF4t7peMHmfQ&s" },
-//   { id: 4, name: "Cricket", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRrva3MguYw3zp8T8PLtxgOxBJ4AXbTO71X4A&s" },
-// ];
-
 export default function SportsCardCarousel({ sports, children }) {
   const TRENDING_CARDS = sports
-  console.log(sports);
 
   return (
     <div className="w-full py-8 pb-10 md:mt-10">
@@ -30,11 +22,10 @@ export default function SportsCardCarousel({ sports, children }) {
           1024: { slidesPerView: 3.5 },
           1280: { slidesPerView: 4 },
         }}
-        className="pb-12 px-4" // Padding here ensures shadow isn't clipped
+        className="pb-12 px-4" 
       >
         {TRENDING_CARDS.map((card) => (
           <SwiperSlide key={card.id}>
-            {/* Removed w-64 to let Swiper define the width based on slidesPerView */}
             <div className={`bg-[${card.backgroundColor
               }] relative h-80 rounded-[2rem] overflow-hidden shadow-lg group cursor-pointer`}>
               <img

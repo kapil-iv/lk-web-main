@@ -40,6 +40,11 @@ export const ENDPOINTS = {
   validateDiscountCode: '/bookings/validate-discount',
   applyDiscountCode: (id) => `/bookings/${id}/apply-discount`,
   removeDiscountCode: (id) => `/bookings/${id}/remove-discount`,
-
+  hostGame: "games",
+  discoverGames: "games",
+  myGames: "games/my-games",
+  joinGame: (id) => `games/${id}/join`,
+  leaveGame: (id) => `games/${id}/leave`,
+  cancelGame: (id) => `games/${id}/cancel`,
 };
 

@@ -239,7 +239,7 @@ const TicketSelectionPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
+        {/* <Header /> */}
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center mb-6">
             <Skeleton className="w-32 h-8" />
@@ -262,7 +262,7 @@ const TicketSelectionPage = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
+        {/* <Header /> */}
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
             <div className="flex">
@@ -284,7 +284,7 @@ const TicketSelectionPage = () => {
   if (!parsedEvent) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
+        {/* <Header /> */}
         <div className="max-w-4xl mx-auto px-4 py-8 text-center">
           <h2 className="text-2xl font-bold text-gray-700 mb-4">Event not found</h2>
           <p className="text-gray-600 mb-6">The event you're looking for doesn't exist or has been removed.</p>

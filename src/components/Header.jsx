@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate, NavLink } from 'react-router-dom';
 import { Search, MapPin, Menu, X, User, LogOut, ChevronDown, HomeIcon, CirclePlay, Trophy, Settings, Calendar } from 'lucide-react';
 import { useEvents } from '../context/EventContext';
@@ -18,14 +18,22 @@ const Header = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const profileRef = React.useRef(null);
+  
+  // Refs for closing dropdowns on outside click
+  const profileRef = useRef(null);
+  const sportsDropdownRef = useRef(null);
 
   const isSportsRoute = location.pathname.startsWith('/sports');
 
   useEffect(() => {
     function handleClickOutside(event) {
+      // Profile dropdown close logic
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
+      }
+      // Sports dropdown close logic (Desktop)
+      if (sportsDropdownRef.current && !sportsDropdownRef.current.contains(event.target)) {
+        setIsSportsHovered(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -36,6 +44,7 @@ const Header = () => {
     { to: "/sports", icon: <HomeIcon size={16} />, label: "Sports Home" },
     { to: "/sports/play", icon: <CirclePlay size={16} />, label: "Play" },
     { to: "/sports/book", icon: <Trophy size={16} />, label: "Book" },
+    { to: "/sports/play/my-games", icon: <Calendar size={16} />, label: "My Games" },
   ];
 
   const navItems = [
@@ -45,8 +54,8 @@ const Header = () => {
     { name: 'About Us', path: 'https://localkonnect.com/about.html' },
   ];
 
-  const handleLogout = () => { // async hata diya
-    logout(); // await hata diya
+  const handleLogout = () => {
+    logout();
     setIsProfileOpen(false);
     navigate('/');
   };
@@ -80,27 +89,52 @@ const Header = () => {
                 <div
                   key={item.name}
                   className="relative"
+                  ref={item.hasDropdown ? sportsDropdownRef : null}
                   onMouseEnter={() => item.hasDropdown && setIsSportsHovered(true)}
+                  // onMouseLeave ko hataya ya rakha ja sakta hai depending on preference, 
+                  // par click behavior ke liye hum isse rehne dete hain:
                   onMouseLeave={() => item.hasDropdown && setIsSportsHovered(false)}
                 >
-                  <Link
-                    to={item.path}
-                    className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-1 ${(item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path))
-                        ? "bg-[#FDF7E7] text-gray-900" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                  {item.hasDropdown ? (
+                    <div
+                      onClick={() => setIsSportsHovered(!isSportsHovered)} // Toggle logic
+                      className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-1 cursor-pointer ${
+                        location.pathname.startsWith(item.path)
+                          ? "bg-[#FDF7E7] text-gray-900" 
+                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                       }`}
-                  >
-                    {item.name}
-                    {item.hasDropdown && <ChevronDown className={`w-4 h-4 transition-transform ${isSportsHovered ? 'rotate-180' : ''}`} />}
-                  </Link>
+                    >
+                      {item.name}
+                      <ChevronDown className={`w-4 h-4 transition-transform ${isSportsHovered ? 'rotate-180' : ''}`} />
+                    </div>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-1 ${
+                        (item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path))
+                          ? "bg-[#FDF7E7] text-gray-900" 
+                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  )}
 
                   <AnimatePresence>
                     {item.hasDropdown && isSportsHovered && (
                       <motion.div
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
                         className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50"
                       >
                         {sportsLinks.map((sLink) => (
-                          <Link key={sLink.to} to={sLink.to} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-primary transition-colors">
+                          <Link 
+                            key={sLink.to} 
+                            to={sLink.to} 
+                            onClick={() => setIsSportsHovered(false)}
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-brand-primary transition-colors"
+                          >
                             {sLink.icon} {sLink.label}
                           </Link>
                         ))}
@@ -129,13 +163,12 @@ const Header = () => {
               )}
             </div>
 
-            {/* Right Side: Search & PROFILE DROPDOWN */}
+            {/* Right Side: Search & Profile */}
             <div className="flex items-center gap-2 lg:gap-4 min-w-[150px] justify-end">
               <button className="p-2 text-gray-500 hover:text-brand-primary transition-colors">
                 <Search className="w-5 h-5" />
               </button>
 
-              {/* Profile Dropdown logic */}
               <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => user ? setIsProfileOpen(!isProfileOpen) : openAuthModal()}
@@ -155,22 +188,9 @@ const Header = () => {
                       className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50 overflow-hidden"
                     >
                       <div className="px-4 py-3 border-b border-gray-50">
-                        {/* <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Logged in as</p> */}
                         <p className="text-sm font-bold text-gray-900 truncate">{user.name || 'User'}</p>
                         <p className="text-[10px] text-gray-500 truncate">{user.email}</p>
                       </div>
-
-                      {/* <div className="py-1">
-                        <Link to="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                          <User size={18} className="text-gray-400" /> My Profile
-                        </Link>
-                        <Link to="/bookings" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                          <Calendar size={18} className="text-gray-400" /> My Bookings
-                        </Link>
-                        <Link to="/settings" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                          <Settings size={18} className="text-gray-400" /> Account Settings
-                        </Link>
-                      </div> */}
 
                       <div className="pt-1 border-t border-gray-50">
                         <button
@@ -223,8 +243,6 @@ const Header = () => {
                     )}
                   </div>
                 ))}
-
-                {/* Mobile Logout (If user logged in) */}
                 {user && (
                   <button onClick={handleLogout} className="w-full text-left px-4 py-3 rounded-xl text-base font-medium text-red-600 hover:bg-red-50">
                     Logout

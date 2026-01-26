@@ -2,6 +2,65 @@ import { axiosUser } from "./axiosInstance";
 import axiosPublic from "./axiosPublic";
 import { ENDPOINTS } from "./endpoints";
 
+// --- PLAY MODULE / GAME ENDPOINTS ---
+
+/**
+ * 1. Host a Game (User A)
+ * @param {Object} gameData - sportCategoryId, venueProviderId, gameType, skillLevel, gameDate, startTime, endTime, maxPlayers, pricePerPlayer, description
+ */
+export const hostGame = async (gameData) => {
+  const response = await axiosUser.post(ENDPOINTS.hostGame, gameData);
+  return response.data;
+};
+
+/**
+ * 2. Discover Games (User B)
+ * @param {Object} filters - date, sport_category_id (Optional)
+ */
+export const discoverGames = async (filters = {}) => {
+  const params = {};
+  if (filters.date) params.date = filters.date;
+  if (filters.sport_category_id) params.sport_category_id = filters.sport_category_id;
+
+  const response = await axiosUser.get(ENDPOINTS.discoverGames, { params });
+  return response.data;
+};
+
+/**
+ * 3. Join a Game (User B)
+ * @param {number|string} gameId
+ */
+export const joinGame = async (gameId) => {
+  if (!gameId) throw new Error("Game ID is required to join");
+  const response = await axiosUser.post(ENDPOINTS.joinGame(gameId), {});
+  return response.data;
+};
+
+/**
+ * 5. Leave Game (User B)
+ * @param {number|string} gameId
+ */
+export const leaveGame = async (gameId) => {
+  if (!gameId) throw new Error("Game ID is required to leave");
+  const response = await axiosUser.post(ENDPOINTS.leaveGame(gameId), {});
+  return response.data;
+};
+
+/**
+ * 6. Cancel Game (Host Only)
+ * @param {number|string} gameId
+ */
+export const cancelGame = async (gameId) => {
+  if (!gameId) throw new Error("Game ID is required to cancel");
+  const response = await axiosUser.post(ENDPOINTS.cancelGame(gameId), {});
+  return response.data;
+};
+
+export const getMyGames = async () => {
+  const response = await axiosUser.get(ENDPOINTS.myGames);
+  return response.data;
+}
+
 // public: get active banner ads
 export const getBannerAds = async () => {
   const response = await axiosUser.get(ENDPOINTS.getBannerAds);
@@ -220,3 +279,7 @@ export const removeDiscountCode = async (id) => {
   const response = await axiosUser.delete(ENDPOINTS.removeDiscountCode(id));
   return response?.data;
 };
+
+
+
+

@@ -58,7 +58,7 @@ const BookingConfirmationPage = () => {
     // Handle case where event is not found
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        {/* <Header /> */}
         <div className="flex-1 flex flex-col items-center justify-center px-4">
           <p className="text-gray-600 mb-4">Error: Event details not found.</p>
           <button
@@ -68,7 +68,7 @@ const BookingConfirmationPage = () => {
             Go to Home
           </button>
         </div>
-        <Footer />
+        {/* <Footer /> */}
       </div>
     );
   }
@@ -193,7 +193,7 @@ const BookingConfirmationPage = () => {
           </div>
         </motion.div>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

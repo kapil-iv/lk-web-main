@@ -50,11 +50,9 @@ const BookingPage = () => {
     const [h, m] = timeStr.split(':').map(Number);
     return h * 60 + m;
   };
-  console.log(venue.category.id);
   // 1. Initial Data Load
   useEffect(() => {
     const loadData = async () => {
-      console.log(" Initial Data Load ", venue);
 
       if (!provider_id) {
         setLoading(false);
@@ -62,7 +60,6 @@ const BookingPage = () => {
         return;
       }
 
-      console.log(" get provider by id", provider_id);
 
       setLoading(true);
       try {
@@ -70,9 +67,7 @@ const BookingPage = () => {
         if (providerRes?.data) setSelectedGround(providerRes.data);
 
         const servicesRes = await getProviderServices(provider_id, { status: "active", approval_status: "approved" });
-        console.log("Services Response:", servicesRes);
         const list = Array.isArray(servicesRes) ? servicesRes : servicesRes?.data || [];
-        console.log("Parsed Services List:", list);
         setServices(list);
         if (list.length > 0) setSelectedService(list[0]);
       } catch (err) {
@@ -88,7 +83,6 @@ const BookingPage = () => {
   useEffect(() => {
     if (!provider_id || !selectedService) return;
     const fetchSlots = async () => {
-      console.log(" Fetch Slots ");
       setSlotsLoading(true);
       setSelectedSlots([]);
       try {
