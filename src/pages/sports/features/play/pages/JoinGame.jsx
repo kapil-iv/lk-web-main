@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, Trophy, ChevronRight, Share2, Award, Clock } from 'lucide-react';
+import { MapPin, Calendar, Trophy, ChevronRight, Share2, Award, Clock, Users2 } from 'lucide-react';
 import { discoverGames, joinGame } from '../../../../../api/apiUtils';
 import { paths } from '../../../../../routes/paths';
 import toast, { Toaster } from 'react-hot-toast';
@@ -120,6 +120,13 @@ const JoinGame = () => {
                 <div className="space-y-1">
                   <p className="text-base">{game.venue?.name}</p>
                   <p className="text-sm text-gray-500 font-normal leading-relaxed">{game.venue?.address}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 text-gray-800 font-bold">
+                <Users2 className="text-blue-400 shrink-0" size={24} />
+                <div className="space-y-1">
+                  <p className="text-base">Joined Players & Slots</p>
+                  <p className="text-sm text-gray-500 font-normal leading-relaxed">{game?.playersJoined}/{game?.maxPlayers} • {game?.slotsLeft} Slots Left</p>
                 </div>
               </div>
             </div>

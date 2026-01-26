@@ -4,7 +4,7 @@ import { paths } from '../routes/paths'; // Check karein aapka path sahi ho
 
 const GameCard = ({ game }) => {
   const navigate = useNavigate();
-  const { id, venue, sport, host, playersJoined, gameType, skillLevel, gameDate, startTime, pricePerPlayer } = game;
+  const { id, venue, sport, host, playersJoined, gameType, skillLevel, gameDate, startTime, pricePerPlayer, slotsLeft } = game;
   const avatarUrl = `https://robohash.org/${host?.id}?set=set3`;
 
   const handleCardClick = () => {
@@ -30,7 +30,7 @@ const GameCard = ({ game }) => {
     <div className="max-w-full md:max-w-[340px] md:min-w-[340px] grow md:grow-0 mb-6">
       <div
         onClick={handleCardClick}
-        className="flex flex-col p-5 bg-white border border-[#E3E8E6] rounded-[20px] shadow-sm hover:shadow-md transition-shadow cursor-pointer min-h-[260px] group"
+        className="flex flex-col p-5 bg-white border border-blue-100 rounded-[20px] shadow-sm hover:shadow-md transition-shadow cursor-pointer min-h-[260px] group"
       >
         {/* Type Header */}
         <div className="flex items-center gap-1 text-[#707A75] text-[15px] font-medium mb-3">
@@ -53,7 +53,11 @@ const GameCard = ({ game }) => {
 
         {/* Host Info */}
         <div className="text-[#707A75] text-[15px] font-medium mb-5">
-          {host?.name} | {host?.followersCount || 0} Karma
+          {host?.name} | {host?.followersCount || 0} Followers
+        </div>
+        {/* players joined and slots left */}
+        <div className="text-[#707A75] text-[15px] font-medium mb-5">
+          {playersJoined} Joined • {slotsLeft} Slots Left
         </div>
 
         {/* Date & Time */}
@@ -73,7 +77,7 @@ const GameCard = ({ game }) => {
         {/* Skill Level Pill */}
         <div className="flex items-center gap-3 mt-auto pt-2">
           <Award size={18} className="text-[#707A75]" />
-          <div className="bg-[#F1F3F2] px-6 py-2 rounded-xl flex-1 text-center group-hover:bg-green-50 transition-colors">
+          <div className="bg-[#F1F3F2] px-6 py-2 rounded-xl flex-1 text-center group-hover:bg-blue-50 transition-colors">
             <span className="text-[#3B4540] text-[15px] font-semibold capitalize tracking-tight">
               {skillLevel}
             </span>

@@ -176,7 +176,7 @@ const GameDetail = () => {
                   </div>
                 </div>
                 {game.myRole !== 'host' && (
-                  <a href={`tel:${game.host.mobile}`} className="p-3 bg-gray-100 rounded-xl text-gray-700 hover:bg-green-500 hover:text-white transition-all">
+                  <a href={`tel:${game.host.mobile}`} className="p-3 bg-gray-100 rounded-xl text-gray-700 hover:bg-blue-500 hover:text-white transition-all">
                     <Phone size={20} />
                   </a>
                 )}

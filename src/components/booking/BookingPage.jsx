@@ -99,6 +99,21 @@ const BookingPage = () => {
     fetchSlots();
   }, [provider_id, selectedService, selectedDate]);
 
+  const handleHostGame = () => {
+    if (selectedSlots.length === 0 || !selectedService) {
+      return toast.error(" Please select slots and service before hosting a game.");
+    }
+
+    navigate(paths.sports.createGame, {
+      state: {
+        venue: venue,
+        selectedSlots: selectedSlots,
+        selectedDate: selectedDate,
+        selectedService: selectedService
+      }
+    });
+  };
+
   // 3. Robust Slot Selection Logic (Consecutive check)
   const handleSlotClick = (startSlot) => {
     const currentSlotsList = Array.isArray(slots) ? slots : (slots?.slots || []);
@@ -283,13 +298,20 @@ const BookingPage = () => {
               )}
             </section>
           </div>
-              <div className="flex justify-center lg:hidden">
-                <button className="px-6 py-3 bg-blue-600 text-white rounded-full font-bold text-sm shadow-lg shadow-blue-200" onClick={ () => {
-                  navigate(paths.sports.createGame);
-                }}>
-                  Create Game
-                </button>
-              </div>
+          {/* MOBILE ONLY: Create Game Button (Center) */}
+            <div className="flex flex-col gap-3 lg:hidden mt-8">
+               <button 
+                onClick={handleHostGame}
+                disabled={selectedSlots.length === 0}
+                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all flex items-center justify-center gap-2 ${
+                  selectedSlots.length > 0 
+                  ? "border-blue-600 text-blue-600 bg-white shadow-md" 
+                  : "border-gray-200 text-gray-300 opacity-50"
+                }`}
+              >
+                <Trophy size={16} /> Host a Match Here
+              </button>
+            </div>
           {/* Sticky Summary */}
           <aside className="lg:w-96">
             <div className="lg:sticky lg:top-24 bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">

@@ -39,7 +39,7 @@ const MyGames = () => {
 
   // Logic updated based on your JSON: myRole tells us if we hosted it
   const filteredGames = games.filter(game =>
-    activeTab === "hosted" ? game.myRole === "host" : game.myRole === "player"
+    activeTab === "hosted" ? game.myRole === "host" && game.status === "open": game.myRole === "player"
   );
 
   return (
@@ -63,7 +63,7 @@ const MyGames = () => {
           </button>
           <button
             onClick={() => setActiveTab("hosted")}
-            className={`flex-1 md:px-8 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'hosted' ? 'bg-green-600 text-white shadow-lg shadow-green-200' : 'text-gray-500 hover:bg-gray-50'}`}
+            className={`flex-1 md:px-8 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'hosted' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-500 hover:bg-gray-50'}`}
           >
             Hosted By Me
           </button>
