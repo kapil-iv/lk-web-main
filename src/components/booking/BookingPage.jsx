@@ -283,7 +283,13 @@ const BookingPage = () => {
               )}
             </section>
           </div>
-
+              <div className="flex justify-center lg:hidden">
+                <button className="px-6 py-3 bg-blue-600 text-white rounded-full font-bold text-sm shadow-lg shadow-blue-200" onClick={ () => {
+                  navigate(paths.sports.createGame);
+                }}>
+                  Create Game
+                </button>
+              </div>
           {/* Sticky Summary */}
           <aside className="lg:w-96">
             <div className="lg:sticky lg:top-24 bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">

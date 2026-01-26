@@ -9,11 +9,7 @@ const Play = () => {
   return (
    <>
     <GameSection/>
-    <Button>
-      Load More
-    </Button>
     <VenueCollection/>
-    {/* <TopSportsComplexes/> */}
     </>
   );
 };
