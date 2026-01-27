@@ -9,7 +9,7 @@ const BookingStatus = () => {
   
   // States
   const [booking, setBooking] = useState(location.state?.booking || null);
-  const [payment] = useState(location.state?.payment || null);
+  const [payment] = useState('');
   const [isLoading, setIsLoading] = useState(!location.state?.booking);
 
   // Background sync to fetch latest status from API
@@ -35,6 +35,9 @@ const BookingStatus = () => {
 
     fetchLatestBooking();
   }, []);
+
+  console.log(booking);
+  
 
   // 1. Loading State
   if (isLoading) {
@@ -82,6 +85,7 @@ const BookingStatus = () => {
 
   const subTotal = booking?.subTotal || 0;
   const totalPrice = booking?.totalPrice || 0;
+  const remainingAmount = booking?.remainingAmount || 0;
   const platformFee = totalPrice - subTotal;
 
   return (
@@ -165,20 +169,65 @@ const BookingStatus = () => {
               <Receipt size={16} className="text-blue-500" /> Invoice Summary
             </h3>
             
-            <div className="space-y-4">
-              <div className="flex justify-between text-xs font-black uppercase tracking-widest">
-                <span className="text-gray-400">Subtotal</span>
-                <span className="text-gray-900">₹{subTotal}</span>
-              </div>
-              <div className="flex justify-between text-xs font-black uppercase tracking-widest">
-                <span className="text-gray-400">Convenience Fee</span>
-                <span className="text-gray-900">₹{platformFee}</span>
-              </div>
-              <div className="pt-6 border-t border-dashed border-gray-200 flex justify-between items-center">
-                <span className="text-sm font-black text-gray-900 uppercase">Paid Amount</span>
-                <span className="text-3xl font-black text-blue-600 tracking-tighter">₹{totalPrice}</span>
-              </div>
-            </div>
+           <div className="space-y-4">
+  {/* 1. Subtotal */}
+  <div className="flex justify-between text-xs font-black uppercase tracking-widest">
+    <span className="text-gray-400">Subtotal</span>
+    <span className="text-gray-900">₹{Math.round(subTotal)}</span>
+  </div>
+
+  {/* 3. Tax Detail (Agar booking data mein available ho) */}
+  {booking?.taxAmount > 0 && (
+    <div className="flex justify-between text-xs font-black uppercase tracking-widest">
+      <span className="text-gray-400">Taxes & GST</span>
+      <span className="text-gray-900">₹{Math.round(booking.taxAmount)}</span>
+    </div>
+  )}
+
+   {/* 2. Platform Fee */}
+  <div className="flex justify-between text-xs font-black uppercase tracking-widest">
+    <span className="text-gray-400">PlatForm Fee</span>
+    <span className="text-gray-900">₹{Math.round(15)}</span>
+  </div>
+
+  {/* 2. Platform/Convenience Fee */}
+  {/* <div className="flex justify-between text-xs font-black uppercase tracking-widest">
+    <span className="text-gray-400">Convenience Fee</span>
+    <span className="text-gray-900">₹{Math.round(platformFee)}</span>
+  </div> */}
+
+
+  {/* 4. K-Coins Discount (Agar use hue hain) */}
+  {booking?.kcoinAmountUsed > 0 && (
+    <div className="flex justify-between text-xs font-black uppercase tracking-widest text-green-600">
+      <span>K-Coins Discount</span>
+      <span>- ₹{Math.round(booking.kcoinAmountUsed)}</span>
+    </div>
+  )}
+
+  {/* 5. Total Booking Value (Optional: For clarity) */}
+  <div className="flex justify-between text-xs font-black uppercase tracking-widest border-t border-gray-50 pt-2">
+    <span className="text-gray-400">Total Value</span>
+    <span className="text-gray-900 font-bold">₹{Math.round(totalPrice)}</span>
+  </div>
+
+  {/* 6. Remaining Amount (Pay at Venue) */}
+  <div className="flex justify-between text-xs font-black uppercase tracking-widest text-orange-600">
+    <span>Remaining (Pay at Venue)</span>
+    <span>₹{Math.round(booking?.remainingAmount || 0)}</span>
+  </div>
+
+  {/* Final Paid Section */}
+  <div className="pt-6 border-t border-dashed border-gray-200 flex justify-between items-center">
+    <div className="flex flex-col">
+      <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Amount Paid Online</span>
+      <span className="text-sm font-black text-gray-900 uppercase">Paid Now</span>
+    </div>
+    <span className="text-3xl font-black text-blue-600 tracking-tighter">
+      ₹{Math.round(totalPrice - (booking?.remainingAmount || 0))}
+    </span>
+  </div>
+</div>
 
             <div className="mt-8 p-5 bg-blue-50 rounded-[2rem] border border-blue-100 flex gap-3">
                <Info className="text-blue-600 shrink-0" size={18} />

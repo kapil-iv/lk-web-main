@@ -42,3 +42,15 @@ export const formatPhoneNumber = (input) => {
     const minutesStr = minutes < 10 ? '0' + minutes : minutes;
     return `${hours}:${minutesStr} ${ampm}`;
   };
+
+ const format24To12 = (time) => {
+  if (!time) return "";
+
+  return new Date(`1970-01-01T${time}`).toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+export default format24To12;

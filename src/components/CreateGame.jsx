@@ -8,6 +8,7 @@ import { hostGame, getServiceProviders } from "../api/apiUtils";
 import { paths } from "../routes/paths";
 import { toast } from "react-hot-toast";
 import useLatLngStore from "../store/useLatLngStore";
+import  formate24to12  from "../utils/helpers.js";
 
 const CreateGame = () => {
   const navigate = useNavigate();
@@ -246,7 +247,11 @@ const CreateGame = () => {
                 <div className="space-y-4">
                   <div className="space-y-3 bg-slate-800/40 p-6 rounded-[2rem] border border-white/5">
                     <div className="flex justify-between items-center text-xs opacity-70">
-                      <span>Venue Base ({formData.maxPlayers} x ₹{formData.pricePerPlayer})</span>
+                      <span>Your Collection amount ({formData.maxPlayers} x ₹{formData.pricePerPlayer})</span>
+                      <span className="font-bold">₹{venueTotal}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs opacity-70">
+                      <span>Venue price</span>
                       <span className="font-bold">₹{venueTotal}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs opacity-70">
@@ -261,13 +266,14 @@ const CreateGame = () => {
                     <div className="h-[1px] bg-white/10 w-full border-dashed my-2" />
 
                     <div className="flex justify-between items-end">
+
+                      <div className="text-right">
+                        <p className="text-gray-500 text-[9px] font-black uppercase tracking-widest">Per Player</p>
+                        <p className="text-xl font-black text-blue-500">₹{formData.pricePerPlayer}</p>
+                      </div>
                       <div className="text-left">
                         <p className="text-blue-400 text-[9px] font-black uppercase tracking-widest">Total Pot Value</p>
                         <p className="text-4xl font-black text-white tracking-tighter">₹{totalPot}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-gray-500 text-[9px] font-black uppercase tracking-widest">Per Head</p>
-                        <p className="text-xl font-black text-blue-500">₹{formData.pricePerPlayer}</p>
                       </div>
                     </div>
                   </div>
@@ -281,7 +287,7 @@ const CreateGame = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock size={14} className="text-blue-500" />
-                    <span className="text-[11px] font-black text-gray-300">{formData.startTime} - {formData.endTime}</span>
+                    <span className="text-[11px] font-black text-gray-300">{formate24to12(  formData.startTime)} - { formate24to12(  formData.endTime)}</span>
                   </div>
                 </div>
 
