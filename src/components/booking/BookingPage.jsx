@@ -299,19 +299,18 @@ const BookingPage = () => {
             </section>
           </div>
           {/* MOBILE ONLY: Create Game Button (Center) */}
-            <div className="flex flex-col gap-3 lg:hidden mt-8">
-               <button 
-                onClick={handleHostGame}
-                disabled={selectedSlots.length === 0}
-                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all flex items-center justify-center gap-2 ${
-                  selectedSlots.length > 0 
-                  ? "border-blue-600 text-blue-600 bg-white shadow-md" 
+          <div className="flex flex-col gap-3 lg:hidden mt-8">
+            <button
+              onClick={handleHostGame}
+              disabled={selectedSlots.length === 0}
+              className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all flex items-center justify-center gap-2 ${selectedSlots.length > 0
+                  ? "border-blue-600 text-blue-600 bg-white shadow-md"
                   : "border-gray-200 text-gray-300 opacity-50"
                 }`}
-              >
-                <Trophy size={16} /> Host a Match Here
-              </button>
-            </div>
+            >
+              <Trophy size={16} /> Host a Match Here
+            </button>
+          </div>
           {/* Sticky Summary */}
           <aside className="lg:w-96">
             <div className="lg:sticky lg:top-24 bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">
@@ -341,6 +340,20 @@ const BookingPage = () => {
                     <span className="text-xs font-black text-gray-900 uppercase">Total Amount</span>
                     <span className="text-3xl font-black text-blue-600 tracking-tighter">₹{basePricePerHour}</span>
                   </div>
+                </div>
+
+                {/* desktop ONLY: Create Game Button (Center) */}
+                <div className="hidden lg:flex flex-col gap-3 mt-8">
+                  <button
+                    onClick={handleHostGame}
+                    disabled={selectedSlots.length === 0}
+                    className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all flex items-center justify-center gap-2 ${selectedSlots.length > 0
+                        ? "border-blue-600 text-blue-600 bg-white shadow-md"
+                        : "border-gray-200 text-gray-300 opacity-50"
+                      }`}
+                  >
+                    <Trophy size={16} /> Host a Match Here
+                  </button>
                 </div>
 
                 <button
