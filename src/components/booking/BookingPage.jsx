@@ -35,6 +35,7 @@ const BookingPage = () => {
   } = useSportsStore();
 
   const venue = venueStore || location.state?.venue;
+  
 
   // Formatting Helpers
   const formatSlotTime = (timeStr) => {
