@@ -38,7 +38,7 @@ const BookingPage = () => {
   } = useSportsStore();
 
   const venue = venueStore || location.state?.venue;
-
+  
   // Helpers
   const formatSlotTime = (timeStr) => {
     if (!timeStr) return "";
@@ -308,10 +308,23 @@ const BookingPage = () => {
                     <span>Duration</span>
                     <span className="text-gray-900">{selectedDuration / 60} Hr(s)</span>
                   </div>
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    <span>venue fee</span>
+                    <span className="text-gray-900">
+                      ₹{basePricePerHour}/hr
+                    </span>
+                  </div>
+
+                   {/* <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    <span>TaxRate</span>
+                    <span className="text-gray-900">
+                      {taxRate}%
+                    </span>
+                  </div> */}
 
                   <div className="flex justify-between items-center pt-6">
-                    <span className="text-xs font-black text-gray-900 uppercase">Total Bill</span>
-                    <span className="text-3xl font-black text-blue-600 tracking-tighter">₹{calculatedPrice}</span>
+                    <span className="text-xs font-black text-gray-900 uppercase">Base Price</span>
+                    <span className="text-3xl font-black text-blue-600 tracking-tighter">₹{basePricePerHour}</span>
                   </div>
 
                   {/* Partial Payment Preview Box */}
