@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, Home, Calendar, MapPin, Clock, Receipt, Info, Trophy, Tag, Loader2 } from 'lucide-react';
-import { getMyBooking } from '../../api/apiUtils'; // Path check kar lena bhai
+import { getMyBooking } from '../../api/apiUtils'; 
 
 const BookingStatus = () => {
   const location = useLocation();
@@ -16,15 +16,11 @@ const BookingStatus = () => {
   useEffect(() => {
     const fetchLatestBooking = async () => {
       try {
-        // Hum "all" category aur current status ke saath call kar rahe hain
-        // Taki agar user refresh kare toh bhi data mil jaye
         const response = await getMyBooking({ category: "all" });
         
         if (response.success && response.data.length > 0) {
-          // Agar redirect se aaye hain, toh latest booking find karo
-          // Default: Sabse recent booking utha rahe hain
           const latest = response.data[0]; 
-          setBooking(latest);
+          setBooking(latest?.id === booking?.id ? latest : booking);
         }
       } catch (error) {
         console.error("Sync Error:", error);
@@ -35,8 +31,6 @@ const BookingStatus = () => {
 
     fetchLatestBooking();
   }, []);
-
-  console.log(booking);
   
 
   // 1. Loading State

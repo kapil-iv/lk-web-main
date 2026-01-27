@@ -92,7 +92,7 @@ const BookingSummary = () => {
       const response = await createBooking(payload);
       const bookingData = response?.data?.booking || response?.booking;
       const paymentData = response?.data?.payment || response?.payment;
-
+      
       if (paymentData?.id) {
         await initiatePayment({
           id: paymentData.id,

@@ -8,7 +8,7 @@ export const paths = {
   home: "/",
   play: "/sports/play",
   train: "/train",
-  book: "/book",
+  book: "/sports/book",
   dashboard: "/dashboard",
   payment: "/payment",
   joinGame: "/joingame",
